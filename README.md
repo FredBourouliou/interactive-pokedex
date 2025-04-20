@@ -162,7 +162,6 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 **Frédéric Bourouliou**
 
 - GitHub: [github.com/FredBourouliou](https://github.com/FredBourouliou)
-- Portfolio: [yourportfolio.com](https://yourportfolio.com)
 
 ---
 
