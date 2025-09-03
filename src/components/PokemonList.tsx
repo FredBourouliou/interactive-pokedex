@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { getPokemonByGeneration, getPokemonDetails, GENERATIONS, Pokemon } from '../services/pokemonService'
+import { getPokemonByGeneration, getPokemonDetails, GENERATIONS } from '../services/pokemonService'
+import type { Pokemon } from '../services/pokemonService'
 import PokemonCard from './PokemonCard'
 import SearchBar from './SearchBar'
 import Loading from './Loading'
@@ -124,7 +125,7 @@ const PokemonList = () => {
       >
         <AnimatePresence mode="wait">
           {filteredPokemon.length > 0 ? (
-            filteredPokemon.map((pokemon, index) => (
+            filteredPokemon.map((pokemon) => (
               <motion.div
                 key={pokemon.id}
                 variants={item}
