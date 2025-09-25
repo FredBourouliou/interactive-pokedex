@@ -32,11 +32,12 @@ const SearchBar = ({ onSearch, initialValue = '' }: SearchBarProps) => {
       <input
         type="text"
         className="search-input"
+        data-testid="search-input"
         placeholder="Search Pokémon by name or ID..."
         value={searchTerm}
         onChange={handleChange}
       />
-      <button type="submit" className="search-button">
+      <button type="submit" className="search-button" data-testid="search-button">
         Search
       </button>
     </form>

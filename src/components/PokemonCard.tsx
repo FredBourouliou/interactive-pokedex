@@ -14,13 +14,14 @@ const PokemonCard = ({ pokemon }: PokemonCardProps) => {
   return (
     <motion.div
       className="pokemon-card"
+      data-testid="pokemon-card"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
       transition={{ duration: 0.3 }}
-      whileHover={{ 
+      whileHover={{
         y: -5,
-        boxShadow: '0 10px 20px rgba(0, 0, 0, 0.15)' 
+        boxShadow: '0 10px 20px rgba(0, 0, 0, 0.15)'
       }}
     >
       <Link to={`/pokemon/${pokemon.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>

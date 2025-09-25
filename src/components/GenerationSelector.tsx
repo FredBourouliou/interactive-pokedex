@@ -17,8 +17,9 @@ const GenerationSelector = ({ onSelectGeneration, currentGeneration }: Generatio
 
   return (
     <div className="generation-selector">
-      <motion.button 
+      <motion.button
         className="generation-current-btn"
+        data-testid="filter-select"
         onClick={() => setIsExpanded(!isExpanded)}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}

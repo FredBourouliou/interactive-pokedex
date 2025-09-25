@@ -12,6 +12,7 @@ A cutting-edge, feature-rich Pokédex application built with modern web technolo
 ![React](https://img.shields.io/badge/React-18.2-61DAFB?logo=react)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.2-3178C6?logo=typescript)
 ![Vite](https://img.shields.io/badge/Vite-5.0-646CFF?logo=vite)
+![E2E Tests](https://img.shields.io/badge/E2E-Playwright-45ba4b?logo=playwright)
 
 ## ✨ Key Features
 
@@ -141,6 +142,11 @@ npm run dev          # Start development server at http://localhost:5173
 npm run build        # Build for production
 npm run preview      # Preview production build at http://localhost:4173
 npm install          # Install dependencies
+npm run test:e2e     # Run E2E tests with Playwright
+npm run test:e2e:ui  # Run E2E tests with interactive UI
+npm run test:e2e:headed  # Run E2E tests in headed mode
+npm run test:e2e:report  # Show HTML test report
+npm run test:e2e:install # Install Playwright browsers
 ```
 
 ## 📱 Features in Detail
@@ -287,6 +293,52 @@ interactive-pokedex/
 - [ ] Advanced statistics
 - [ ] Breeding calculator
 - [ ] Shiny hunting tools
+
+## 🧪 End-to-End Testing
+
+This project includes a comprehensive E2E test suite built with Playwright.
+
+### Test Coverage
+- **Navigation**: Landing page, detail pages, generation switching
+- **Search**: Name/ID search, partial matches, empty states
+- **Filtering**: Generation filters, type filters
+- **Details**: Pokémon information, evolution chains, navigation
+- **Error Handling**: Network errors, 404 pages, loading states
+- **Accessibility**: ARIA landmarks, keyboard navigation, alt text
+- **Performance**: Load times, search response, pagination
+- **Mobile**: Touch interactions, responsive layouts
+
+### Running Tests Locally
+
+```bash
+# Install Playwright browsers (first time only)
+npm run test:e2e:install
+
+# Run all tests
+npm run test:e2e
+
+# Run tests with UI mode (interactive)
+npm run test:e2e:ui
+
+# Run tests in headed mode (see browser)
+npm run test:e2e:headed
+
+# View HTML report after test run
+npm run test:e2e:report
+```
+
+### CI/CD Integration
+- **GitHub Actions**: Automated E2E tests on push/PR
+- **Matrix Testing**: Chromium, Firefox, WebKit
+- **Artifacts**: Screenshots, traces, and JUnit reports
+- **Test Reports**: HTML reports and test videos on failure
+
+### Test Configuration
+- **Browsers**: Chromium, Firefox, WebKit, Mobile Chrome
+- **Retries**: 2 retries on CI, 0 locally
+- **Screenshots**: On failure only
+- **Traces**: On first retry
+- **Videos**: Retained on failure
 
 ## 🤝 Contributing
 

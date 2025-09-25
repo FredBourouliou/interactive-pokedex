@@ -67,6 +67,7 @@ const EnhancedPokemonCard = ({ pokemon, showComparison = false, onCompare }: Enh
   return (
     <motion.div
       className="pokemon-card enhanced"
+      data-testid="pokemon-card"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
