@@ -47,7 +47,7 @@ const EnhancedHeader: React.FC = () => {
         <div className="header-container">
           <Link to="/" className="logo-section">
             <motion.img 
-              src="/pokeball.svg" 
+              src={`${import.meta.env.BASE_URL}pokeball.svg`} 
               alt="Pokéball" 
               className="pokeball-logo"
               animate={{ rotate: 360 }}
@@ -107,7 +107,7 @@ const EnhancedHeader: React.FC = () => {
         </div>
       </motion.header>
 
-      <style jsx>{`
+      <style>{`
         .enhanced-header {
           position: sticky;
           top: 0;
