@@ -55,7 +55,7 @@ const EnhancedHeader: React.FC = () => {
             />
             <div className="logo-text">
               <h1 className="logo-title">Pokédex</h1>
-              <span className="logo-subtitle">Professional Edition</span>
+              <span className="logo-subtitle">PokéAPI explorer</span>
             </div>
           </Link>
 
