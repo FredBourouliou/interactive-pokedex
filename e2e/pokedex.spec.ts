@@ -8,9 +8,41 @@ test.describe('Pokédex list', () => {
     await expect(page.locator(cards).first()).toBeVisible();
   });
 
-  test('loads the 151 Kanto Pokémon by default', async ({ page }) => {
-    await expect(page.locator(cards)).toHaveCount(151);
+  test('All Regions (default) covers every generation, one page at a time', async ({ page }) => {
+    await expect(page.getByRole('button', { name: 'All Regions' })).toHaveClass(/active/);
+    await expect(page.getByText('Discover and explore 1025 Pokémon')).toBeVisible();
+    await expect(page.locator(cards)).toHaveCount(48);
     await expect(page.locator(cards).first()).toContainText('#001');
+    await expect(page.locator(cards).first()).toContainText('bulbasaur');
+    await expect(page.getByText('Showing 48 of 1025')).toBeVisible();
+
+    await page.getByRole('button', { name: 'Load 48 more' }).click();
+    await expect(page.locator(cards)).toHaveCount(96);
+    await expect(page.locator(cards).last()).toContainText('#096');
+  });
+
+  test('All Regions search reaches the last generations', async ({ page }) => {
+    await page.getByPlaceholder('Search by name or ID...').fill('1025');
+    await expect(page.locator(cards)).toHaveCount(1);
+    await expect(page.locator(cards).first()).toContainText('#1025');
+    await expect(page.locator(cards).first()).toContainText('testmon-1025');
+  });
+
+  test('details are fetched only for the cards on screen', async ({ page }) => {
+    const detailRequests = new Set<string>();
+    page.on('request', (req) => {
+      if (/\/api\/v2\/pokemon\/\d+\/?$/.test(req.url())) detailRequests.add(req.url());
+    });
+    await page.reload();
+    await expect(page.locator(`${cards} .stat-value`).nth(48 * 3 - 1)).toHaveText('50');
+    expect(detailRequests.size).toBe(48);
+  });
+
+  test('switching back to All Regions restores the full list', async ({ page }) => {
+    await page.getByRole('button', { name: /Johto/ }).click();
+    await expect(page.getByText('Discover and explore 100 Pokémon')).toBeVisible();
+    await page.getByRole('button', { name: 'All Regions' }).click();
+    await expect(page.getByText('Discover and explore 1025 Pokémon')).toBeVisible();
     await expect(page.locator(cards).first()).toContainText('bulbasaur');
   });
 
@@ -30,13 +62,35 @@ test.describe('Pokédex list', () => {
     const typeGroup = page.locator('.filter-group').filter({ has: page.locator('label', { hasText: /^Type$/ }) });
     await typeGroup.locator('select').selectOption('electric');
     await expect(page.locator(`${cards} .pokemon-name`)).toHaveText(['pikachu', 'raichu']);
+    await expect(page.getByText('Discover and explore 2 Pokémon')).toBeVisible();
+  });
+
+  test('sort by type orders the whole index by primary type', async ({ page }) => {
+    const sortGroup = page.locator('.filter-group').filter({ has: page.locator('label', { hasText: /^Sort By$/ }) });
+    await sortGroup.locator('select').selectOption('type');
+    // electric < fire < grass < normal; ties keep National Dex order.
+    await expect(page.locator(`${cards} .pokemon-name`).first()).toHaveText('pikachu');
+    const names = await page.locator(`${cards} .pokemon-name`).evaluateAll((els) => els.slice(0, 8).map((e) => e.textContent));
+    expect(names).toEqual(['pikachu', 'raichu', 'charmander', 'charmeleon', 'charizard', 'bulbasaur', 'chikorita', 'testmon-2']);
   });
 
   test('region selector loads the matching ID range', async ({ page }) => {
     await page.getByRole('button', { name: /Johto/ }).click();
-    await expect(page.locator(cards)).toHaveCount(100);
+    await expect(page.getByText('Discover and explore 100 Pokémon')).toBeVisible();
     await expect(page.locator(cards).first()).toContainText('#152');
     await expect(page.locator(cards).first()).toContainText('chikorita');
+  });
+
+  test('a region can be paged through to its last Pokémon', async ({ page }) => {
+    await page.getByRole('button', { name: /Kanto/ }).click();
+    await expect(page.getByText('Discover and explore 151 Pokémon')).toBeVisible();
+    await expect(page.locator(cards)).toHaveCount(48);
+    await page.getByRole('button', { name: 'Load 48 more' }).click();
+    await page.getByRole('button', { name: 'Load 48 more' }).click();
+    await page.getByRole('button', { name: 'Load 7 more' }).click();
+    await expect(page.locator(cards)).toHaveCount(151);
+    await expect(page.locator(cards).last()).toContainText('#151');
+    await expect(page.locator('.load-more-btn')).toHaveCount(0);
   });
 });
 

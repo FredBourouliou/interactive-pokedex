@@ -6,7 +6,8 @@ test.skip(!process.env.E2E_LIVE, 'set E2E_LIVE=1 to run against the real PokéAP
 
 test('loads real data from PokéAPI', async ({ page }) => {
   await page.goto('./');
-  await expect(page.locator('.pokemon-card-enhanced')).toHaveCount(151, { timeout: 30_000 });
+  await expect(page.getByText('Discover and explore 1025 Pokémon')).toBeVisible({ timeout: 30_000 });
+  await expect(page.locator('.pokemon-card-enhanced')).toHaveCount(48);
   await expect(page.locator('.pokemon-card-enhanced').first()).toContainText('bulbasaur');
 
   await page.goto('./#/pokemon/25');

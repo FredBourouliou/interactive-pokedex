@@ -1,31 +1,34 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Pokemon } from '../types/pokemon';
-import { fetchPokemonList, fetchPokemonDetails } from '../services/api';
+import { fetchPokemonById, fetchPokemonIndex, fetchTypeMembers, spriteUrl, PokemonIndexEntry } from '../services/api';
 import { TYPE_COLORS } from '../constants/typeColors';
+import { GENERATIONS, MAX_POKEMON_ID } from '../constants/generations';
 
-const GENERATIONS = [
-  { id: 1, name: 'Kanto', range: [1, 151], color: '#FF6B6B' },
-  { id: 2, name: 'Johto', range: [152, 251], color: '#4ECDC4' },
-  { id: 3, name: 'Hoenn', range: [252, 386], color: '#45B7D1' },
-  { id: 4, name: 'Sinnoh', range: [387, 493], color: '#96CEB4' },
-  { id: 5, name: 'Unova', range: [494, 649], color: '#FFEAA7' },
-  { id: 6, name: 'Kalos', range: [650, 721], color: '#DDA0DD' },
-  { id: 7, name: 'Alola', range: [722, 809], color: '#FFA07A' },
-  { id: 8, name: 'Galar', range: [810, 905], color: '#98D8C8' },
-  { id: 9, name: 'Paldea', range: [906, 1025], color: '#FFB6C1' }
-];
+/** Cards rendered per page; details are only fetched for rendered cards. */
+const PAGE_SIZE = 48;
+/** Concurrent detail requests per batch. */
+const DETAIL_BATCH = 16;
+const ALL_TYPES = Object.keys(TYPE_COLORS).sort();
 
 const EnhancedPokemonList: React.FC = () => {
-  const [pokemonList, setPokemonList] = useState<Pokemon[]>([]);
+  const [index, setIndex] = useState<PokemonIndexEntry[]>([]);
+  const [details, setDetails] = useState<Record<number, Pokemon>>({});
+  const [typeMembers, setTypeMembers] = useState<Record<string, Map<number, number>>>({});
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedGeneration, setSelectedGeneration] = useState<number | null>(null);
   const [selectedType, setSelectedType] = useState<string>('all');
   const [sortBy, setSortBy] = useState<'id' | 'name' | 'type'>('id');
   const [showShiny, setShowShiny] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+
+  const indexCache = useRef(new Map<number, PokemonIndexEntry[]>());
+  const requestedDetails = useRef(new Set<number>());
+  const requestedTypes = useRef(new Set<string>());
 
   useEffect(() => {
     const handleShinyToggle = (e: CustomEvent) => {
@@ -35,56 +38,116 @@ const EnhancedPokemonList: React.FC = () => {
     return () => window.removeEventListener('shinyToggle', handleShinyToggle as EventListener);
   }, []);
 
+  // Lightweight index (id + name) of the selected region, or of every generation for "All Regions".
   useEffect(() => {
-    loadPokemon();
+    let cancelled = false;
+    const key = selectedGeneration ?? 0;
+    const cached = indexCache.current.get(key);
+    setError(null);
+    if (cached) {
+      setIndex(cached);
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    const [start, end] = selectedGeneration ? GENERATIONS[selectedGeneration - 1].range : [1, MAX_POKEMON_ID];
+    fetchPokemonIndex(end - start + 1, start - 1)
+      .then((list) => {
+        indexCache.current.set(key, list);
+        if (!cancelled) setIndex(list);
+      })
+      .catch((err) => {
+        console.error('Error loading Pokemon:', err);
+        if (!cancelled) setError('Failed to load the Pokémon list. Please try again later.');
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [selectedGeneration]);
 
-  const loadPokemon = async () => {
-    setLoading(true);
-    try {
-      const gen = selectedGeneration ? GENERATIONS[selectedGeneration - 1] : null;
-      const [start, end] = gen ? gen.range : [1, 151];
-      
-      const list = await fetchPokemonList(end - start + 1, start - 1);
-      const detailedPokemon = await Promise.all(
-        list.results.map((p: { name: string; url: string }) => fetchPokemonDetails(p.url))
-      );
-      setPokemonList(detailedPokemon);
-    } catch (error) {
-      console.error('Error loading Pokemon:', error);
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+  }, [selectedGeneration, searchTerm, selectedType, sortBy]);
+
+  // Type data comes from /type/{name} (one request per type) so filtering and sorting
+  // by type work on the whole index without fetching every Pokémon's details.
+  const neededTypes = useMemo(
+    () => (sortBy === 'type' ? ALL_TYPES : selectedType !== 'all' ? [selectedType] : []),
+    [sortBy, selectedType],
+  );
+
+  useEffect(() => {
+    for (const type of neededTypes) {
+      if (requestedTypes.current.has(type)) continue;
+      requestedTypes.current.add(type);
+      fetchTypeMembers(type)
+        .then((members) => setTypeMembers((prev) => ({ ...prev, [type]: members })))
+        .catch((err) => {
+          console.error(`Error loading type ${type}:`, err);
+          requestedTypes.current.delete(type);
+          setError('Failed to load type data. Please try again later.');
+        });
     }
-    setLoading(false);
-  };
+  }, [neededTypes]);
+
+  const typesReady = neededTypes.every((type) => typeMembers[type]);
 
   const filteredAndSortedPokemon = useMemo(() => {
-    let filtered = pokemonList.filter(pokemon => {
-      const matchesSearch = pokemon.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           pokemon.id.toString().includes(searchTerm);
-      const matchesType = selectedType === 'all' || 
-                         pokemon.types.some(t => t.type.name === selectedType);
-      return matchesSearch && matchesType;
-    });
+    if (!typesReady) return [];
+    const term = searchTerm.trim().toLowerCase();
+    const members = selectedType === 'all' ? null : typeMembers[selectedType];
+    const filtered = index.filter(
+      (p) => (p.name.includes(term) || p.id.toString().includes(term)) && (!members || members.has(p.id)),
+    );
 
-    // Sort
-    filtered.sort((a, b) => {
-      switch (sortBy) {
-        case 'name':
-          return a.name.localeCompare(b.name);
-        case 'type':
-          return a.types[0].type.name.localeCompare(b.types[0].type.name);
-        default:
-          return a.id - b.id;
+    if (sortBy === 'name') {
+      filtered.sort((a, b) => a.name.localeCompare(b.name));
+    } else if (sortBy === 'type') {
+      const primaryType = new Map<number, string>();
+      for (const type of ALL_TYPES) {
+        typeMembers[type]?.forEach((slot, id) => {
+          if (slot === 1) primaryType.set(id, type);
+        });
       }
-    });
-
+      filtered.sort(
+        (a, b) => (primaryType.get(a.id) ?? '').localeCompare(primaryType.get(b.id) ?? '') || a.id - b.id,
+      );
+    } else {
+      filtered.sort((a, b) => a.id - b.id);
+    }
     return filtered;
-  }, [pokemonList, searchTerm, selectedType, sortBy]);
+  }, [index, searchTerm, selectedType, sortBy, typeMembers, typesReady]);
 
-  const allTypes = useMemo(() => {
-    const types = new Set<string>();
-    pokemonList.forEach(p => p.types.forEach(t => types.add(t.type.name)));
-    return Array.from(types).sort();
-  }, [pokemonList]);
+  const visiblePokemon = useMemo(
+    () => filteredAndSortedPokemon.slice(0, visibleCount),
+    [filteredAndSortedPokemon, visibleCount],
+  );
+
+  // Details (types, stats) only for the cards on screen, in small batches, cached across filters.
+  useEffect(() => {
+    const missing = visiblePokemon.filter((p) => !requestedDetails.current.has(p.id));
+    if (missing.length === 0) return;
+    missing.forEach((p) => requestedDetails.current.add(p.id));
+
+    (async () => {
+      for (let i = 0; i < missing.length; i += DETAIL_BATCH) {
+        const batch = missing.slice(i, i + DETAIL_BATCH);
+        const results = await Promise.allSettled(batch.map((p) => fetchPokemonById(p.id)));
+        const loaded: Record<number, Pokemon> = {};
+        results.forEach((result, j) => {
+          if (result.status === 'fulfilled') loaded[batch[j].id] = result.value;
+          else requestedDetails.current.delete(batch[j].id);
+        });
+        setDetails((prev) => ({ ...prev, ...loaded }));
+      }
+    })();
+  }, [visiblePokemon]);
+
+  const busy = loading || !typesReady;
+  const remaining = filteredAndSortedPokemon.length - visiblePokemon.length;
 
   return (
     <div className="enhanced-pokemon-list">
@@ -98,11 +161,11 @@ const EnhancedPokemonList: React.FC = () => {
         <h1 className="hero-title">
           Pokédex Explorer
           <span className="hero-subtitle">
-            {selectedGeneration ? GENERATIONS[selectedGeneration - 1].name : 'All'} Region
+            {selectedGeneration ? `${GENERATIONS[selectedGeneration - 1].region} Region` : 'All Regions'}
           </span>
         </h1>
         <p className="hero-description">
-          Discover and explore {filteredAndSortedPokemon.length} Pokémon
+          {busy ? 'Loading Pokémon...' : `Discover and explore ${filteredAndSortedPokemon.length} Pokémon`}
         </p>
       </motion.div>
 
@@ -143,7 +206,7 @@ const EnhancedPokemonList: React.FC = () => {
               className="filter-select"
             >
               <option value="all">All Types</option>
-              {allTypes.map(type => (
+              {ALL_TYPES.map(type => (
                 <option key={type} value={type}>
                   {type.charAt(0).toUpperCase() + type.slice(1)}
                 </option>
@@ -208,76 +271,96 @@ const EnhancedPokemonList: React.FC = () => {
               borderColor: gen.color
             }}
           >
-            <span className="gen-name">{gen.name}</span>
+            <span className="gen-name">{gen.region}</span>
             <span className="gen-range">#{gen.range[0]}-{gen.range[1]}</span>
           </button>
         ))}
       </motion.div>
 
       {/* Pokemon Grid/List */}
-      {loading ? (
+      {error ? (
+        <div className="error-message">{error}</div>
+      ) : busy ? (
         <div className="loading-container-enhanced">
           <div className="loading-pokeball"></div>
           <p>Loading Pokémon...</p>
         </div>
       ) : (
-        <AnimatePresence mode="wait">
-          <motion.div 
-            className={`pokemon-container ${viewMode}`}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
-          >
-            {filteredAndSortedPokemon.map((pokemon, index) => (
-              <motion.div
-                key={pokemon.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3, delay: index * 0.01 }}
-              >
-                <Link to={`/pokemon/${pokemon.id}`} className="pokemon-card-enhanced">
-                  <div className="pokemon-number">#{String(pokemon.id).padStart(3, '0')}</div>
-                  <div className="pokemon-image-container">
-                    <img
-                      src={showShiny ? pokemon.sprites.front_shiny : pokemon.sprites.front_default}
-                      alt={pokemon.name}
-                      className="pokemon-image"
-                      loading="lazy"
-                    />
-                    {showShiny && <span className="shiny-indicator">✨</span>}
-                  </div>
-                  <h3 className="pokemon-name">{pokemon.name}</h3>
-                  <div className="pokemon-types">
-                    {pokemon.types.map((type) => (
-                      <span
-                        key={type.type.name}
-                        className="type-badge-enhanced"
-                        style={{ backgroundColor: TYPE_COLORS[type.type.name] }}
-                      >
-                        {type.type.name}
-                      </span>
-                    ))}
-                  </div>
-                  <div className="pokemon-stats-preview">
-                    <div className="stat-preview">
-                      <span className="stat-label">HP</span>
-                      <span className="stat-value">{pokemon.stats[0].base_stat}</span>
-                    </div>
-                    <div className="stat-preview">
-                      <span className="stat-label">ATK</span>
-                      <span className="stat-value">{pokemon.stats[1].base_stat}</span>
-                    </div>
-                    <div className="stat-preview">
-                      <span className="stat-label">DEF</span>
-                      <span className="stat-value">{pokemon.stats[2].base_stat}</span>
-                    </div>
-                  </div>
-                </Link>
-              </motion.div>
-            ))}
-          </motion.div>
-        </AnimatePresence>
+        <>
+          <AnimatePresence mode="wait">
+            <motion.div 
+              className={`pokemon-container ${viewMode}`}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              {visiblePokemon.map((entry, index) => {
+                const pokemon = details[entry.id];
+                const sprite = (showShiny ? pokemon?.sprites.front_shiny : pokemon?.sprites.front_default)
+                  || spriteUrl(entry.id, showShiny);
+                return (
+                  <motion.div
+                    key={entry.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, delay: (index % PAGE_SIZE) * 0.01 }}
+                  >
+                    <Link to={`/pokemon/${entry.id}`} className="pokemon-card-enhanced">
+                      <div className="pokemon-number">#{String(entry.id).padStart(3, '0')}</div>
+                      <div className="pokemon-image-container">
+                        <img
+                          src={sprite}
+                          alt={entry.name}
+                          className="pokemon-image"
+                          loading="lazy"
+                        />
+                        {showShiny && <span className="shiny-indicator">✨</span>}
+                      </div>
+                      <h3 className="pokemon-name">{entry.name}</h3>
+                      <div className="pokemon-types">
+                        {pokemon ? (
+                          pokemon.types.map((type) => (
+                            <span
+                              key={type.type.name}
+                              className="type-badge-enhanced"
+                              style={{ backgroundColor: TYPE_COLORS[type.type.name] }}
+                            >
+                              {type.type.name}
+                            </span>
+                          ))
+                        ) : (
+                          <span className="type-badge-enhanced type-badge-placeholder" aria-hidden="true">
+                            &nbsp;
+                          </span>
+                        )}
+                      </div>
+                      <div className="pokemon-stats-preview">
+                        {(['HP', 'ATK', 'DEF'] as const).map((label, i) => (
+                          <div className="stat-preview" key={label}>
+                            <span className="stat-label">{label}</span>
+                            <span className="stat-value">{pokemon ? pokemon.stats[i].base_stat : '–'}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </Link>
+                  </motion.div>
+                );
+              })}
+            </motion.div>
+          </AnimatePresence>
+
+          {remaining > 0 && (
+            <div className="load-more-wrapper">
+              <p className="load-more-status">
+                Showing {visiblePokemon.length} of {filteredAndSortedPokemon.length}
+              </p>
+              <button className="load-more-btn" onClick={() => setVisibleCount((count) => count + PAGE_SIZE)}>
+                Load {Math.min(PAGE_SIZE, remaining)} more
+              </button>
+            </div>
+          )}
+        </>
       )}
 
       <style>{`
@@ -635,6 +718,47 @@ const EnhancedPokemonList: React.FC = () => {
           text-transform: uppercase;
           letter-spacing: 0.5px;
           box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .type-badge-placeholder {
+          min-width: 4.5rem;
+          background: #e9ecef;
+          box-shadow: none;
+        }
+
+        .load-more-wrapper {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 1rem;
+          margin-top: 3rem;
+        }
+
+        .load-more-status {
+          color: #666;
+          font-weight: 600;
+        }
+
+        .load-more-btn {
+          padding: 1rem 2.5rem;
+          border: none;
+          border-radius: 16px;
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          color: white;
+          font-size: 1.1rem;
+          font-weight: 700;
+          cursor: pointer;
+          transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .load-more-btn:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 8px 20px rgba(102, 126, 234, 0.35);
+        }
+
+        .load-more-btn:focus-visible {
+          outline: 3px solid #764ba2;
+          outline-offset: 3px;
         }
 
         .pokemon-stats-preview {
