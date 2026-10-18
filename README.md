@@ -8,10 +8,10 @@ A Pokédex web app built with React and TypeScript on top of the public [PokéAP
 
 ## Features
 
-- **Browse by region**: Kanto to Paldea (Generations I–IX), one region loaded at a time (Kanto by default).
-- **Search and filter**: search by name or ID, filter by type, sort by number, name or type, grid or list view.
+- **Browse all 1025 Pokémon** (Generations I–IX) or one region at a time, 48 cards per page with a "Load more" button.
+- **Search and filter** across the whole selected range: search by name or ID, filter by type, sort by number, name or type, grid or list view.
 - **Shiny toggle** in the header to switch card sprites to their shiny variant.
-- **Detail page** per Pokémon: artwork (animated sprite when available), types, Pokédex description, height, weight, abilities, base-stat bar chart and type chart.
+- **Detail page** per Pokémon: artwork (animated sprite when available), types, generation, Pokédex description, height, weight, abilities, base-stat bar chart and type chart.
 - **Comparison**: put up to 6 Pokémon side by side with their base stats (the picker currently offers the first 20 Kanto Pokémon).
 - **Damage calculator**: simplified damage formula with type effectiveness, STAB, critical hits, weather and terrain modifiers.
 - **Teams**: create, delete, import and export named teams (JSON, stored in `localStorage`). Adding Pokémon to a team is not implemented yet.
@@ -25,6 +25,13 @@ A Pokédex web app built with React and TypeScript on top of the public [PokéAP
 - Axios / `fetch` against PokéAPI
 - Plain CSS
 - Playwright for end-to-end tests, GitHub Actions for CI and Pages deployment
+
+## How it works
+
+- `src/main.tsx` mounts `App` inside a `HashRouter`; `App` maps routes to the components in `src/components/`.
+- The list (`EnhancedPokemonList`) fetches a lightweight index (id + name) of the selected range in one request, then fetches full details only for the cards on screen, in batches, and caches them. Type filtering and sorting use PokéAPI's `/type/{name}` endpoint, so they apply to the whole range.
+- Generation metadata (regions, National Dex ranges) lives in `src/constants/generations.ts`.
+- Teams and favorites are stored in `localStorage`; there is no backend.
 
 ## Run locally
 
