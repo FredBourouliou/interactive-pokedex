@@ -53,12 +53,35 @@ const pokemon = (id: number) => ({
   species: { url: `${API}/pokemon-species/${id}/` },
 });
 
+// Last National Dex number of each generation (I..IX), as in PokéAPI.
+const GENERATION_ENDS = [151, 251, 386, 493, 649, 721, 809, 905, 1025];
+const ROMAN = ['i', 'ii', 'iii', 'iv', 'v', 'vi', 'vii', 'viii', 'ix'];
+const generationOf = (id: number) => {
+  const index = GENERATION_ENDS.findIndex((end) => id <= end);
+  return { name: `generation-${ROMAN[index]}`, url: `${API}/generation/${index + 1}/` };
+};
+
 const species = (id: number) => ({
   flavor_text_entries: [{ flavor_text: `Test description for ${nameOf(id)}.`, language: { name: 'en' } }],
   genera: [{ genus: 'Test Pokémon', language: { name: 'en' } }],
   color: { name: 'yellow' },
-  generation: { name: 'generation-i', url: `${API}/generation/1/` },
+  generation: generationOf(id),
 });
+
+const TYPES = [
+  'normal', 'fire', 'water', 'electric', 'grass', 'ice', 'fighting', 'poison', 'ground',
+  'flying', 'psychic', 'bug', 'rock', 'ghost', 'dragon', 'dark', 'steel', 'fairy',
+];
+
+/** `/type/{name}`: every Pokémon having that type, with the slot it occupies. */
+const typeMembers = (type: string) => {
+  const pokemon = [];
+  for (let id = 1; id <= MAX_ID; id++) {
+    const slot = typesOf(id).indexOf(type);
+    if (slot >= 0) pokemon.push({ slot: slot + 1, pokemon: { name: nameOf(id), url: `${API}/pokemon/${id}/` } });
+  }
+  return { name: type, pokemon };
+};
 
 const resolveId = (raw: string) => (/^\d+$/.test(raw) ? Number(raw) : idFromName(raw));
 
@@ -76,6 +99,12 @@ export async function mockPokeApi(page: Page) {
         results.push({ name: nameOf(id), url: `${API}/pokemon/${id}/` });
       }
       return route.fulfill({ json: { count: MAX_ID, results } });
+    }
+
+    if (resource === 'type') {
+      return TYPES.includes(key)
+        ? route.fulfill({ json: typeMembers(key) })
+        : route.fulfill({ status: 404, body: 'Not Found' });
     }
 
     const id = key ? resolveId(key) : NaN;

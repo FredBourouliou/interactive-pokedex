@@ -60,6 +60,21 @@ test.describe('Pokémon detail', () => {
     await expect(page.locator('.detail-name')).toHaveText('charizard');
   });
 
+  // Regression: the badge used to read "Generation I" for any generation name containing an "i".
+  for (const [id, badge] of [
+    [25, 'Generation I (Kanto)'],
+    [152, 'Generation II (Johto)'],
+    [448, 'Generation IV (Sinnoh)'],
+    [700, 'Generation VI (Kalos)'],
+    [810, 'Generation VIII (Galar)'],
+    [1000, 'Generation IX (Paldea)'],
+  ] as const) {
+    test(`generation badge for #${id} reads "${badge}"`, async ({ page }) => {
+      await page.goto(`./#/pokemon/${id}`);
+      await expect(page.locator('.generation-badge')).toHaveText(badge);
+    });
+  }
+
   test('unknown Pokémon shows an error message', async ({ page }) => {
     await page.goto('./#/pokemon/99999');
     await expect(page.getByText('Failed to fetch Pokémon data')).toBeVisible();

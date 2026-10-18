@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { getPokemonDetails, getPokemonSpecies, getTypeColor, getAnimatedSprite, GENERATIONS, Pokemon, PokemonSpecies } from '../services/pokemonService'
+import { getPokemonDetails, getPokemonSpecies, getTypeColor, getAnimatedSprite, Pokemon, PokemonSpecies } from '../services/pokemonService'
+import { generationFromApi } from '../constants/generations'
 import Loading from './Loading'
 import StatsChart from './StatsChart'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -66,16 +67,7 @@ const PokemonDetail = () => {
     return englishGenus ? englishGenus.genus : ''
   }
 
-  const getGenerationInfo = () => {
-    if (!species) return null;
-    
-    const genName = species.generation.name; // format: "generation-i"
-    const genId = parseInt(genName.split('-')[1].replace('i', '1').replace('v', '5').replace('x', '10'), 10);
-    
-    return GENERATIONS.find(gen => gen.id === genId);
-  }
-
-  const generationInfo = getGenerationInfo();
+  const generationInfo = species ? generationFromApi(species.generation) : undefined
 
   const stats = pokemon.stats.map(stat => ({
     name: stat.stat.name,

@@ -79,19 +79,6 @@ export interface Generation {
 
 const API_URL = 'https://pokeapi.co/api/v2';
 
-// Structure des limites de Pokémon par génération
-export const GENERATIONS = [
-  { id: 1, name: 'Generation I', region: 'Kanto', limit: 151, offset: 0 },
-  { id: 2, name: 'Generation II', region: 'Johto', limit: 100, offset: 151 },
-  { id: 3, name: 'Generation III', region: 'Hoenn', limit: 135, offset: 251 },
-  { id: 4, name: 'Generation IV', region: 'Sinnoh', limit: 107, offset: 386 },
-  { id: 5, name: 'Generation V', region: 'Unova', limit: 156, offset: 493 },
-  { id: 6, name: 'Generation VI', region: 'Kalos', limit: 72, offset: 649 },
-  { id: 7, name: 'Generation VII', region: 'Alola', limit: 88, offset: 721 },
-  { id: 8, name: 'Generation VIII', region: 'Galar', limit: 89, offset: 809 },
-  { id: 9, name: 'Generation IX', region: 'Paldea', limit: 103, offset: 898 },
-];
-
 export const getPokemonList = async (limit: number = 50, offset: number = 0): Promise<{ id: number; name: string; url: string }[]> => {
   try {
     const response = await axios.get(`${API_URL}/pokemon?limit=${limit}&offset=${offset}`);
@@ -111,21 +98,6 @@ export const getGenerationDetails = async (generationId: number): Promise<Genera
     return response.data;
   } catch (error) {
     console.error(`Error fetching generation details for ${generationId}:`, error);
-    throw error;
-  }
-};
-
-export const getPokemonByGeneration = async (generationId: number): Promise<{ id: number; name: string; url: string }[]> => {
-  try {
-    const genInfo = GENERATIONS.find(gen => gen.id === generationId);
-    
-    if (!genInfo) {
-      throw new Error(`Generation ${generationId} not found`);
-    }
-    
-    return getPokemonList(genInfo.limit, genInfo.offset);
-  } catch (error) {
-    console.error(`Error fetching Pokemon for generation ${generationId}:`, error);
     throw error;
   }
 };
