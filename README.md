@@ -26,8 +26,6 @@ A Pokédex web app built with React and TypeScript on top of the public [PokéAP
 - Plain CSS
 - Playwright for end-to-end tests, GitHub Actions for CI and Pages deployment
 
-`src/features`, `src/store`, `src/i18n`, `src/infrastructure` and `src/core` contain an unfinished rewrite of some screens with Material UI, Redux Toolkit and i18next. It compiles but is not wired into the running app.
-
 ## Run locally
 
 Requires Node.js 20+.
