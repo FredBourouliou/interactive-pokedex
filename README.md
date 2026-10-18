@@ -1,412 +1,58 @@
-# 🎮 Interactive Pokédex - Professional Edition
+# Interactive Pokédex
 
-**DISCLAIMER: This project is a fan-made application for educational purposes only. Pokémon and all related names are trademark of Nintendo/Creatures Inc./GAME FREAK Inc. This project is not affiliated with or endorsed by Nintendo, Creatures Inc., or GAME FREAK Inc. All Pokémon content is © Nintendo, Creatures Inc., GAME FREAK Inc.**
+A Pokédex web app built with React and TypeScript on top of the public [PokéAPI](https://pokeapi.co/).
 
-## 🚀 Modern Interactive Pokédex Application
+![Screenshot of the Pokédex list view](public/screenshots/capture1.png)
 
-A cutting-edge, feature-rich Pokédex application built with modern web technologies. Explore all 1025+ Pokémon across 9 generations with professional-grade features including team building, damage calculation, and advanced analytics.
+**[▶ Live demo](https://fredbourouliou.github.io/interactive-pokedex/)**
 
-![Interactive Pokédex Screenshot](public/screenshots/capture1.png)
+## Features
 
-![Version](https://img.shields.io/badge/version-2.0.0-blue)
-![React](https://img.shields.io/badge/React-18.2-61DAFB?logo=react)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.2-3178C6?logo=typescript)
-![Vite](https://img.shields.io/badge/Vite-5.0-646CFF?logo=vite)
-![E2E Tests](https://img.shields.io/badge/E2E-Playwright-45ba4b?logo=playwright)
+- **Browse by region**: Kanto to Paldea (Generations I–IX), one region loaded at a time (Kanto by default).
+- **Search and filter**: search by name or ID, filter by type, sort by number, name or type, grid or list view.
+- **Shiny toggle** in the header to switch card sprites to their shiny variant.
+- **Detail page** per Pokémon: artwork (animated sprite when available), types, Pokédex description, height, weight, abilities, base-stat bar chart and type chart.
+- **Comparison**: put up to 6 Pokémon side by side with their base stats (the picker currently offers the first 20 Kanto Pokémon).
+- **Damage calculator**: simplified damage formula with type effectiveness, STAB, critical hits, weather and terrain modifiers.
+- **Teams**: create, delete, import and export named teams (JSON, stored in `localStorage`). Adding Pokémon to a team is not implemented yet.
+- **Favorites**: list, filter, import and export a favorites file (JSON, stored in `localStorage`). There is no "add to favorites" button in the UI yet.
 
-## ✨ Key Features
+## Tech stack
 
-### 📊 Core Functionality
-- **Complete Pokédex**: All 1025+ Pokémon from Generations I-IX (Kanto to Paldea)
-- **Real-time Search**: Instant filtering by name or ID
-- **Animated Sprites**: High-quality sprites with shiny variants
-- **Responsive Design**: Works perfectly on desktop, tablet, and mobile
-- **Professional UI**: Modern gradient design with smooth animations
+- React 18, TypeScript, Vite 5
+- React Router 6 (`HashRouter`, so deep links work on GitHub Pages)
+- Framer Motion (animations), Recharts (charts)
+- Axios / `fetch` against PokéAPI
+- Plain CSS
+- Playwright for end-to-end tests, GitHub Actions for CI and Pages deployment
 
-### 🎯 Main Features
+`src/features`, `src/store`, `src/i18n`, `src/infrastructure` and `src/core` contain an unfinished rewrite of some screens with Material UI, Redux Toolkit and i18next. It compiles but is not wired into the running app.
 
-#### 📖 **Enhanced Pokédex**
-- Browse all Pokémon with beautiful cards
-- Grid and list view modes
-- Advanced filtering by type and generation
-- Sort by number, name, or type
-- Quick stats preview on cards
-- Shiny mode toggle
+## Run locally
 
-#### ⚖️ **Pokémon Comparison**
-- Compare up to 6 Pokémon side-by-side
-- Visual stat comparison with animated bars
-- Type effectiveness analysis
-- Modal selector for easy Pokémon selection
-- Professional comparison layout
-
-#### 👥 **Team Builder**
-- Create and manage multiple teams
-- Drag-and-drop team composition
-- Team templates (Rain, Sun, Sandstorm, etc.)
-- Import/Export teams as JSON
-- Team analysis and recommendations
-- Store teams locally
-
-#### 🧮 **Damage Calculator**
-- Complete battle damage simulation
-- Physical/Special move categories
-- Weather effects (Sun, Rain, Sandstorm, Hail)
-- Terrain effects (Electric, Grassy, Misty, Psychic)
-- STAB and critical hit calculations
-- Type effectiveness multipliers
-- Real-time damage range calculation
-
-#### ❤️ **Favorites System**
-- Save your favorite Pokémon
-- Import/Export collections
-- Filter and sort favorites
-- Collection statistics
-- Persistent storage
-
-## 🛠️ Technology Stack
-
-### Frontend
-- **React 18.2** - Modern UI Library
-- **TypeScript** - Type Safety
-- **Vite 5.0** - Lightning-fast build tool
-- **React Router v6** - Client-side routing
-- **Framer Motion** - Smooth animations
-- **CSS-in-JS** - Styled components
-
-### Data & APIs
-- **PokéAPI v2** - Primary Pokémon data source
-- **LocalStorage** - Persistent data storage
-
-## 🚀 Quick Start
-
-### Prerequisites
-- Node.js 18+ 
-- npm 9+ or yarn 1.22+
-
-### Installation & Running
-
-#### Method 1: Using the automated scripts (Recommended)
+Requires Node.js 20+.
 
 ```bash
-# Clone the repository
-git clone https://github.com/FredBourouliou/interactive-pokedex.git
-cd interactive-pokedex
-
-# Make scripts executable (only needed once)
-chmod +x pokedex.sh start.sh
-
-# Quick start
-./start.sh
-
-# OR use the full-featured management script
-./pokedex.sh start
+npm ci
+npm run dev        # http://localhost:5173/interactive-pokedex/
+npm run build      # type-check and production build into dist/
+npm run preview    # serve the production build
 ```
 
-#### Method 2: Manual commands
+## Tests
+
+End-to-end tests use Playwright. PokéAPI is mocked in the tests (`e2e/utils/pokeapi-mock.ts`), so they do not depend on the network.
 
 ```bash
-# Clone the repository
-git clone https://github.com/FredBourouliou/interactive-pokedex.git
-cd interactive-pokedex
-
-# Install dependencies
-npm install
-
-# Start development server
-npm run dev
-
-# The app will be available at http://localhost:5173
+npx playwright install          # once, downloads the browsers
+npm run test:e2e                # builds the app, serves it and runs the suite
+E2E_LIVE=1 npx playwright test e2e/live.spec.ts --project=chromium   # optional smoke test against the real PokéAPI
 ```
 
-## 📋 Available Scripts
+CI runs the suite on Chromium, Firefox and WebKit for every push and pull request to `main`.
 
-### Using the Management Script (`pokedex.sh`)
+## License
 
-```bash
-./pokedex.sh          # Show interactive menu
-./pokedex.sh start    # Start development server
-./pokedex.sh build    # Build for production
-./pokedex.sh preview  # Preview production build
-./pokedex.sh install  # Install/reinstall dependencies
-./pokedex.sh update   # Update dependencies
-./pokedex.sh clean    # Clean project (remove node_modules, dist)
-./pokedex.sh info     # Display project information
-./pokedex.sh help     # Show help menu
-```
+[MIT](LICENSE) © 2025 Frédéric Bourouliou
 
-### Using npm directly
-
-```bash
-npm run dev          # Start development server at http://localhost:5173
-npm run build        # Build for production
-npm run preview      # Preview production build at http://localhost:4173
-npm install          # Install dependencies
-npm run test:e2e     # Run E2E tests with Playwright
-npm run test:e2e:ui  # Run E2E tests with interactive UI
-npm run test:e2e:headed  # Run E2E tests in headed mode
-npm run test:e2e:report  # Show HTML test report
-npm run test:e2e:install # Install Playwright browsers
-```
-
-## 📱 Features in Detail
-
-### 🎨 User Interface
-- **Modern Design**: Professional gradients and shadows
-- **Smooth Animations**: Framer Motion powered transitions
-- **Responsive Layout**: Adapts to all screen sizes
-- **Theme Support**: Consistent color scheme throughout
-- **Interactive Elements**: Hover effects and visual feedback
-
-### 🔍 Search & Filter System
-- **Instant Search**: Real-time filtering as you type
-- **Type Filtering**: Filter by Pokémon type
-- **Generation Selection**: Quick access to each generation
-- **Sort Options**: By number, name, or type
-- **View Modes**: Switch between grid and list layouts
-
-### 📊 Data Management
-- **Local Storage**: Persistent favorites and teams
-- **Import/Export**: Share data via JSON files
-- **Offline Support**: Cached data for offline browsing
-- **State Management**: Efficient React state handling
-
-## 🏗️ Project Structure
-
-```
-interactive-pokedex/
-├── src/
-│   ├── components/           # React components
-│   │   ├── EnhancedHeader.tsx
-│   │   ├── EnhancedPokemonList.tsx
-│   │   ├── EnhancedPokemonCard.tsx
-│   │   ├── BetterComparison.tsx
-│   │   ├── EnhancedTeams.tsx
-│   │   ├── EnhancedCalculator.tsx
-│   │   ├── EnhancedFavorites.tsx
-│   │   ├── PokemonDetail.tsx
-│   │   └── ...
-│   ├── core/                # Core domain logic
-│   │   ├── domain/
-│   │   ├── services/
-│   │   └── types/
-│   ├── features/            # Feature modules
-│   │   ├── battle/
-│   │   ├── comparison/
-│   │   ├── evolution/
-│   │   ├── filters/
-│   │   ├── pokemon/
-│   │   └── teams/
-│   ├── infrastructure/      # External services
-│   ├── services/            # API services
-│   │   └── api.ts
-│   ├── shared/              # Shared utilities
-│   │   ├── components/
-│   │   ├── constants/
-│   │   ├── hooks/
-│   │   └── utils/
-│   ├── store/              # State management
-│   ├── i18n/               # Internationalization
-│   ├── constants/          # Constants and configs
-│   ├── types/              # TypeScript types
-│   ├── styles/             # Global styles
-│   ├── App.tsx             # Main app component
-│   └── main.tsx            # Entry point
-├── public/                 # Static assets
-├── pokedex.sh             # Management script
-├── start.sh               # Quick start script
-└── package.json           # Dependencies
-```
-
-## 🎮 Usage Examples
-
-### Team Building
-1. Navigate to Teams section (👥)
-2. Click "New Team"
-3. Choose a template (optional)
-4. Name your team and add description
-5. Add Pokémon to slots (coming soon: full integration)
-6. Export team as JSON file
-
-### Damage Calculation
-1. Go to Calculator (🧮)
-2. Set attacker stats (Level, Attack/Sp.Attack)
-3. Configure move (Power, Type, Physical/Special)
-4. Set defender stats (HP, Defense/Sp.Defense, Types)
-5. Add environment effects (Weather, Terrain)
-6. Click "Calculate Damage" to see results
-
-### Pokémon Comparison
-1. Browse to Compare (⚖️)
-2. Click "Add Pokémon" 
-3. Search and select Pokémon in modal
-4. View side-by-side stat comparison
-5. Add up to 6 Pokémon total
-
-### Managing Favorites
-1. Click heart icon on any Pokémon card
-2. Go to Favorites (❤️)
-3. View your collection
-4. Filter by type or search
-5. Export/Import collections
-
-## 🌐 Browser Support
-
-- Chrome/Edge 90+ ✅
-- Firefox 88+ ✅
-- Safari 14+ ✅
-- Opera 76+ ✅
-- Mobile browsers ✅
-
-## 📈 Performance
-
-- **Initial Load**: < 3s
-- **Route Changes**: Instant
-- **Search Response**: Real-time
-- **Animations**: 60fps smooth
-- **Mobile Optimized**: Touch-friendly
-
-## 🔄 Current Status & Roadmap
-
-### ✅ Completed
-- Enhanced UI with professional design
-- Complete Pokédex with all generations
-- Pokémon comparison system
-- Team builder interface
-- Damage calculator
-- Favorites management
-- Shiny mode toggle
-- Responsive design
-
-### 🚧 In Progress
-- Full team builder integration with Pokédex
-- Evolution chain visualization
-- Move database integration
-
-### 📋 Planned Features
-- [ ] Pokémon cries and sound effects
-- [ ] Battle simulator
-- [ ] Trading card integration
-- [ ] Multi-language support
-- [ ] PWA offline mode
-- [ ] Dark theme
-- [ ] Advanced statistics
-- [ ] Breeding calculator
-- [ ] Shiny hunting tools
-
-## 🧪 End-to-End Testing
-
-This project includes a comprehensive E2E test suite built with Playwright.
-
-### Test Coverage
-- **Navigation**: Landing page, detail pages, generation switching
-- **Search**: Name/ID search, partial matches, empty states
-- **Filtering**: Generation filters, type filters
-- **Details**: Pokémon information, evolution chains, navigation
-- **Error Handling**: Network errors, 404 pages, loading states
-- **Accessibility**: ARIA landmarks, keyboard navigation, alt text
-- **Performance**: Load times, search response, pagination
-- **Mobile**: Touch interactions, responsive layouts
-
-### Running Tests Locally
-
-```bash
-# Install Playwright browsers (first time only)
-npm run test:e2e:install
-
-# Run all tests
-npm run test:e2e
-
-# Run tests with UI mode (interactive)
-npm run test:e2e:ui
-
-# Run tests in headed mode (see browser)
-npm run test:e2e:headed
-
-# View HTML report after test run
-npm run test:e2e:report
-```
-
-### CI/CD Integration
-- **GitHub Actions**: Automated E2E tests on push/PR
-- **Matrix Testing**: Chromium, Firefox, WebKit
-- **Artifacts**: Screenshots, traces, and JUnit reports
-- **Test Reports**: HTML reports and test videos on failure
-
-### Test Configuration
-- **Browsers**: Chromium, Firefox, WebKit, Mobile Chrome
-- **Retries**: 2 retries on CI, 0 locally
-- **Screenshots**: On failure only
-- **Traces**: On first retry
-- **Videos**: Retained on failure
-
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
-## 🐛 Troubleshooting
-
-### Common Issues
-
-**Port already in use:**
-```bash
-# Use the management script to handle it automatically
-./pokedex.sh start
-# It will ask to kill the existing process
-```
-
-**Dependencies not installed:**
-```bash
-./pokedex.sh install
-```
-
-**Clean reinstall needed:**
-```bash
-./pokedex.sh clean
-./pokedex.sh install
-./pokedex.sh start
-```
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgements
-
-- [PokéAPI](https://pokeapi.co/) - Comprehensive Pokémon data
-- [Nintendo/Game Freak](https://www.pokemon.com/) - Original Pokémon creators
-- [React Team](https://react.dev/) - Amazing framework
-- [Vite](https://vitejs.dev/) - Lightning fast build tool
-- All contributors and testers
-
-## 👤 Author
-
-**Fred Bourouliou**
-
-- GitHub: [@FredBourouliou](https://github.com/FredBourouliou)
-
-## 📊 Project Stats
-
-- **Components**: 15+ React components
-- **Features**: 6 major features
-- **Pokémon**: 1025+ complete entries
-- **Generations**: All 9 generations
-- **Performance**: 95+ Lighthouse score
-
----
-
-<div align="center">
-
-**Built with ❤️ and TypeScript**
-
-⭐ Star us on GitHub — it helps!
-
-[Report Bug](https://github.com/FredBourouliou/interactive-pokedex/issues) · [Request Feature](https://github.com/FredBourouliou/interactive-pokedex/issues)
-
-</div>
+This is a non-commercial fan project. Pokémon and all related names are trademarks of Nintendo, Creatures Inc. and GAME FREAK Inc. Pokémon content is © Nintendo, Creatures Inc., GAME FREAK Inc. This project is not affiliated with or endorsed by any of these companies. Data comes from [PokéAPI](https://pokeapi.co/).
