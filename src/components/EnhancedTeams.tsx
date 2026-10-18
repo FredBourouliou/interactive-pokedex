@@ -373,7 +373,7 @@ const EnhancedTeams: React.FC = () => {
         </div>
       </div>
 
-      <style jsx>{`
+      <style>{`
         .enhanced-teams {
           padding: 2rem 0;
           min-height: 100vh;

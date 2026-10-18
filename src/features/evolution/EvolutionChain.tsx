@@ -7,8 +7,6 @@ import {
   CardMedia,
   CardContent,
   Chip,
-  IconButton,
-  Tooltip,
   LinearProgress,
   Alert,
 } from '@mui/material';

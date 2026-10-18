@@ -6,7 +6,6 @@ const BetterComparison: React.FC = () => {
   const [selectedPokemon, setSelectedPokemon] = useState<Pokemon[]>([]);
   const [availablePokemon, setAvailablePokemon] = useState<Pokemon[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [loading, setLoading] = useState(false);
   const [showSelector, setShowSelector] = useState(false);
   const maxSelection = 6;
 
@@ -15,7 +14,6 @@ const BetterComparison: React.FC = () => {
   }, []);
 
   const loadPokemonList = async () => {
-    setLoading(true);
     try {
       const list = await getPokemonList(151, 0); // Load Gen 1 for demo
       const details = await Promise.all(
@@ -24,8 +22,6 @@ const BetterComparison: React.FC = () => {
       setAvailablePokemon(details);
     } catch (error) {
       console.error('Error loading Pokémon:', error);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -230,7 +226,7 @@ const BetterComparison: React.FC = () => {
         )}
       </AnimatePresence>
 
-      <style jsx>{`
+      <style>{`
         .better-comparison {
           padding: 2rem;
           max-width: 1400px;

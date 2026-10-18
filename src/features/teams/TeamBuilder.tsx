@@ -17,10 +17,6 @@ import {
   DialogContent,
   DialogActions,
   Chip,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
   Slider,
   Tab,
   Tabs,
@@ -32,42 +28,27 @@ import {
   ListItemSecondaryAction,
   Tooltip,
   Badge,
-  Fab,
-  Divider,
   Alert,
 } from '@mui/material';
 import {
   Add as AddIcon,
   Delete as DeleteIcon,
   Edit as EditIcon,
-  Save as SaveIcon,
   Share as ShareIcon,
   ContentCopy as CopyIcon,
   Download as DownloadIcon,
-  CloudUpload as ImportIcon,
   DragIndicator as DragIcon,
 } from '@mui/icons-material';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
-import { motion, AnimatePresence } from 'framer-motion';
 import { RootState } from '../../store/store';
 import {
   createTeam,
-  updateTeam,
   deleteTeam,
-  addPokemonToTeam,
   removePokemonFromTeam,
   reorderTeamPokemon,
 } from '../../store/slices/teamsSlice';
-import { Team, TeamPokemon, Pokemon } from '../../core/types';
+import { Team, TeamPokemon } from '../../core/types';
 import { getAnimatedSprite, getTypeColor } from '../../infrastructure/api/pokemonApi';
-
-const NATURES = [
-  'Hardy', 'Lonely', 'Brave', 'Adamant', 'Naughty',
-  'Bold', 'Docile', 'Relaxed', 'Impish', 'Lax',
-  'Timid', 'Hasty', 'Serious', 'Jolly', 'Naive',
-  'Modest', 'Mild', 'Quiet', 'Bashful', 'Rash',
-  'Calm', 'Gentle', 'Sassy', 'Careful', 'Quirky',
-];
 
 const TeamBuilder: React.FC = () => {
   const dispatch = useDispatch();
@@ -75,7 +56,7 @@ const TeamBuilder: React.FC = () => {
   const { showShinySprites } = useSelector((state: RootState) => state.settings);
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
-  const [editPokemonDialog, setEditPokemonDialog] = useState<{
+  const [, setEditPokemonDialog] = useState<{
     open: boolean;
     teamId: string;
     pokemonIndex: number;
@@ -120,18 +101,6 @@ const TeamBuilder: React.FC = () => {
   };
 
   const exportTeam = (team: Team) => {
-    const teamData = team.pokemon.map(p => ({
-      pokemon: p.pokemon.name,
-      nickname: p.nickname || '',
-      level: p.level,
-      nature: p.nature?.name || '',
-      ability: p.ability || '',
-      item: p.item || '',
-      moves: p.moves.join(', '),
-      evs: p.evs ? `HP:${p.evs.hp} Atk:${p.evs.attack} Def:${p.evs.defense} SpA:${p.evs.specialAttack} SpD:${p.evs.specialDefense} Spe:${p.evs.speed}` : '',
-      shiny: p.shiny ? 'Yes' : 'No',
-    }));
-
     const showdownFormat = team.pokemon.map(p => {
       let output = p.nickname ? `${p.nickname} (${p.pokemon.name})` : p.pokemon.name;
       if (p.item) output += ` @ ${p.item}`;

@@ -1,8 +1,7 @@
 import axios from 'axios';
-import { Pokemon, PokemonSpecies, EvolutionChain, Move, Type, Ability, Generation } from '../../core/types';
+import { Pokemon, PokemonSpecies, EvolutionChain, Move, Type, Ability } from '../../core/types';
 
 const API_URL = 'https://pokeapi.co/api/v2';
-const TCG_API_URL = 'https://api.pokemontcg.io/v2';
 
 const axiosInstance = axios.create({
   baseURL: API_URL,

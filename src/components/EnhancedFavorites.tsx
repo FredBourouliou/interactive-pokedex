@@ -369,7 +369,7 @@ const EnhancedFavorites: React.FC = () => {
         </motion.div>
       )}
 
-      <style jsx>{`
+      <style>{`
         .enhanced-favorites {
           padding: 2rem 0;
           min-height: 100vh;

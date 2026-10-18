@@ -9,32 +9,19 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
-  Button,
   Card,
   CardContent,
   Slider,
   Switch,
   FormControlLabel,
-  Chip,
   Alert,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Autocomplete,
-  ToggleButton,
-  ToggleButtonGroup,
+  IconButton,
   LinearProgress,
 } from '@mui/material';
 import {
-  Calculate as CalculateIcon,
   SwapHoriz as SwapIcon,
-  Info as InfoIcon,
 } from '@mui/icons-material';
-import { Pokemon, Move, Type } from '../../core/types';
-import { getTypeColor } from '../../infrastructure/api/pokemonApi';
+import { Pokemon, Move } from '../../core/types';
 
 interface DamageResult {
   minDamage: number;
@@ -53,7 +40,7 @@ interface DamageResult {
 const DamageCalculator: React.FC = () => {
   const [attacker, setAttacker] = useState<Pokemon | null>(null);
   const [defender, setDefender] = useState<Pokemon | null>(null);
-  const [selectedMove, setSelectedMove] = useState<Move | null>(null);
+  const [selectedMove] = useState<Move | null>(null);
   const [attackerLevel, setAttackerLevel] = useState(50);
   const [defenderLevel, setDefenderLevel] = useState(50);
   const [attackerStats, setAttackerStats] = useState({

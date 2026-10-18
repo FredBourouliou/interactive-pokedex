@@ -15,13 +15,11 @@ import {
   TableRow,
   Tabs,
   Tab,
-  Tooltip,
   Button,
   Card,
   CardMedia,
   CardContent,
   LinearProgress,
-  Fab,
 } from '@mui/material';
 import {
   Close as CloseIcon,
@@ -29,9 +27,9 @@ import {
   Clear as ClearIcon,
   Download as DownloadIcon,
 } from '@mui/icons-material';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { RootState } from '../../store/store';
-import { removeFromComparison, clearComparison, setComparisonMode } from '../../store/slices/comparisonSlice';
+import { removeFromComparison, clearComparison } from '../../store/slices/comparisonSlice';
 import { getTypeColor, getAnimatedSprite } from '../../infrastructure/api/pokemonApi';
 import { Pokemon } from '../../core/types';
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, Legend } from 'recharts';
@@ -52,7 +50,7 @@ const TabPanel: React.FC<TabPanelProps> = ({ children, value, index, ...other })
 
 const PokemonComparison: React.FC = () => {
   const dispatch = useDispatch();
-  const { selectedPokemon, comparisonMode } = useSelector((state: RootState) => state.comparison);
+  const { selectedPokemon } = useSelector((state: RootState) => state.comparison);
   const { showShinySprites } = useSelector((state: RootState) => state.settings);
   const [tabValue, setTabValue] = React.useState(0);
 

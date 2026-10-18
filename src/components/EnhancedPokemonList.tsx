@@ -47,7 +47,7 @@ const EnhancedPokemonList: React.FC = () => {
       
       const list = await fetchPokemonList(end - start + 1, start - 1);
       const detailedPokemon = await Promise.all(
-        list.results.map(p => fetchPokemonDetails(p.url))
+        list.results.map((p: { name: string; url: string }) => fetchPokemonDetails(p.url))
       );
       setPokemonList(detailedPokemon);
     } catch (error) {
@@ -280,7 +280,7 @@ const EnhancedPokemonList: React.FC = () => {
         </AnimatePresence>
       )}
 
-      <style jsx>{`
+      <style>{`
         .enhanced-pokemon-list {
           padding: 2rem 0;
           min-height: 100vh;

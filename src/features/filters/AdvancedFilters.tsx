@@ -22,8 +22,6 @@ import {
   FormControlLabel,
   Switch,
   Badge,
-  IconButton,
-  Tooltip,
 } from '@mui/material';
 import {
   ExpandMore as ExpandMoreIcon,
@@ -36,7 +34,6 @@ import {
   setTypeFilter,
   setGenerationFilter,
   setStatsFilter,
-  setAbilitiesFilter,
   setHeightFilter,
   setWeightFilter,
   setLegendaryFilter,

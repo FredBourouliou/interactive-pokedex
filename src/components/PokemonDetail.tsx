@@ -268,7 +268,7 @@ const PokemonDetail = () => {
                     />
                   ))}
                 </Pie>
-                <Tooltip formatter={(value, name) => [name, '']} />
+                <Tooltip formatter={(_value, name) => [name, '']} />
               </PieChart>
             </ResponsiveContainer>
           </motion.div>
